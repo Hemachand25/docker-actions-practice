@@ -1,0 +1,47 @@
+services:
+  mysqldb:
+    image: mysql:8
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: docker
+      MYSQL_DATABASE: practicedb
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - springboot-mysql-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pdocker"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: hemachand0425/backend-practice:latest
+    container_name: springboot
+    ports:
+      - "8080:2000"
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - springboot-mysql-net
+
+  frontend:
+    image: hemachand0425/frontend-practice:latest
+    container_name: react
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: on-failure
+    networks:
+      - springboot-mysql-net
+
+volumes:
+  mysql_data:
+
+networks:
+  springboot-mysql-net:
